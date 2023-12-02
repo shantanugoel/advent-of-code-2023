@@ -2,7 +2,7 @@ use std::io::BufRead;
 
 pub fn part1() {
     // read a file called day1
-    let file = std::fs::File::open("../inputs/day1").unwrap();
+    let file = std::fs::File::open("./inputs/day1").unwrap();
     let mut sum = 0;
     for line in std::io::BufReader::new(file).lines() {
         let line = line.unwrap();
@@ -49,7 +49,7 @@ fn digit_value(slice: &str) -> u32 {
 }
 
 pub fn part2() {
-    let file = std::fs::File::open("../inputs/day1").unwrap();
+    let file = std::fs::File::open("./inputs/day1").unwrap();
     let mut sum = 0;
     for line in std::io::BufReader::new(file).lines() {
         let line = line.unwrap();
