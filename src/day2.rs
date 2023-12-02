@@ -30,3 +30,42 @@ pub fn part1() {
     }
     println!("Number of possible games: {}", num_games_possible);
 }
+
+pub fn part2() {
+    let file = std::fs::File::open("./inputs/day2").unwrap();
+    let re_colors = Regex::new(r"(\d+) (\w+)").unwrap();
+    let mut power = 0;
+    for line in std::io::BufReader::new(file).lines() {
+        let line = line.unwrap();
+        let data_begin = line.find(": ").unwrap();
+        let mut min_red = 1;
+        let mut min_green = 1;
+        let mut min_blue = 1;
+        for cap in re_colors.captures_iter(&line[data_begin + 2..]) {
+            let num = cap[1].parse::<i32>().unwrap();
+            let color = cap[2].to_string();
+            match color.as_str() {
+                "red" => {
+                    if num > min_red {
+                        min_red = num;
+                    }
+                }
+                "green" => {
+                    if num > min_green {
+                        min_green = num;
+                    }
+                }
+                "blue" => {
+                    if num > min_blue {
+                        min_blue = num;
+                    }
+                }
+                _ => {
+                    println!("Unknown color: {}", color);
+                }
+            }
+        }
+        power += min_red * min_green * min_blue;
+    }
+    println!("Power: {}", power);
+}
