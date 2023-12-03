@@ -68,11 +68,26 @@ pub fn part1() {
     println!("Sum of parts: {}", sum_parts);
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Numbers {
     start: usize,
     end: usize,
     number: i32,
+}
+
+fn get_touch_numbers(numbers: Vec<Numbers>, index: usize, diag: bool) -> Vec<i32> {
+    let mut result: Vec<i32> = Vec::new();
+    for number in numbers.clone() {
+        if (number.start != 0 && index == number.start - 1) || index == number.end + 1 {
+            result.push(number.number);
+            continue;
+        }
+        if diag && (index >= number.start && index <= number.end) {
+            result.push(number.number);
+        }
+    }
+    // println!("{:?}: {}: {:?}", numbers, index, result);
+    result
 }
 
 pub fn part2() {
@@ -80,6 +95,8 @@ pub fn part2() {
     let re = regex::Regex::new(r"([0-9]+)").unwrap();
     let mut parsed_numbers: Vec<Vec<Numbers>> = Vec::new();
     let mut star_positions: Vec<Vec<usize>> = Vec::new();
+    let lines_len = lines.len();
+    let mut sum = 0;
     for line in lines {
         let mut temp: Vec<Numbers> = Vec::new();
         let numbers = re.find_iter(&line);
@@ -97,6 +114,35 @@ pub fn part2() {
             .collect();
         star_positions.push(star_temp);
     }
-    println!("{:?}", parsed_numbers);
-    println!("Part 2 not implemented");
+    for (index, stars) in star_positions.into_iter().enumerate() {
+        for star in stars {
+            let mut touching_numbers: Vec<i32> = Vec::new();
+            if index != 0 {
+                //search in prev line
+                touching_numbers.append(&mut get_touch_numbers(
+                    parsed_numbers.get(index - 1).unwrap().to_vec(),
+                    star,
+                    true,
+                ));
+            }
+            // Search in current line
+            touching_numbers.append(&mut get_touch_numbers(
+                parsed_numbers.get(index).unwrap().to_vec(),
+                star,
+                false,
+            ));
+            if index < lines_len - 1 {
+                // Search in next line
+                touching_numbers.append(&mut get_touch_numbers(
+                    parsed_numbers.get(index + 1).unwrap().to_vec(),
+                    star,
+                    true,
+                ));
+            }
+            if touching_numbers.len() == 2 {
+                sum += touching_numbers[0] * touching_numbers[1];
+            }
+        }
+    }
+    println!("Sum: {}", sum);
 }
