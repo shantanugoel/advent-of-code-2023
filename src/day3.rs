@@ -67,3 +67,36 @@ pub fn part1() {
     }
     println!("Sum of parts: {}", sum_parts);
 }
+
+#[derive(Debug)]
+struct Numbers {
+    start: usize,
+    end: usize,
+    number: i32,
+}
+
+pub fn part2() {
+    let lines = utils::read_lines("./inputs/day3");
+    let re = regex::Regex::new(r"([0-9]+)").unwrap();
+    let mut parsed_numbers: Vec<Vec<Numbers>> = Vec::new();
+    let mut star_positions: Vec<Vec<usize>> = Vec::new();
+    for line in lines {
+        let mut temp: Vec<Numbers> = Vec::new();
+        let numbers = re.find_iter(&line);
+        for matches in numbers {
+            let number = matches.as_str().parse::<i32>().unwrap();
+            let start = matches.start();
+            let end = matches.end() - 1;
+            temp.push(Numbers { start, end, number });
+        }
+        parsed_numbers.push(temp);
+        let star_temp: Vec<usize> = line
+            .char_indices()
+            .filter(|&(_, c)| c == '*')
+            .map(|(pos, _)| pos)
+            .collect();
+        star_positions.push(star_temp);
+    }
+    println!("{:?}", parsed_numbers);
+    println!("Part 2 not implemented");
+}
