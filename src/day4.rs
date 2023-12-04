@@ -59,6 +59,5 @@ pub fn part2() {
             }
         }
     }
-    let sum: i32 = card_counter.iter().sum();
-    println!("Day 4 part 2: {}", sum);
+    println!("Day 4 part 2: {}", card_counter.iter().sum::<i32>());
 }
