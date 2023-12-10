@@ -235,9 +235,6 @@ pub fn part2() {
             }
         }
     }
-    // for coordinate in loop_set {
-    //     map[coordinate.y as usize][coordinate.x as usize] = 'X';
-    // }
 
     let mut sum = 0;
 
