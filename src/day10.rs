@@ -1,6 +1,10 @@
+use std::collections::HashSet;
+
+use num_integer::Integer;
+
 use crate::utils;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Coordinate {
     x: i32,
     y: i32,
@@ -147,4 +151,151 @@ pub fn part1() {
     }
 }
 
-pub fn part2() {}
+fn traverse_pipes_2(
+    map: &Vec<Vec<char>>,
+    start: Coordinate,
+) -> Option<(usize, HashSet<Coordinate>)> {
+    let mut num_steps = 0;
+    let mut loop_found = false;
+    let directions_to_process = [
+        Coordinate { x: 0, y: 1 },
+        Coordinate { x: 0, y: -1 },
+        Coordinate { x: 1, y: 0 },
+        Coordinate { x: -1, y: 0 },
+    ];
+    let mut set: HashSet<Coordinate> = HashSet::new();
+    for direction in directions_to_process.iter() {
+        let mut current = start;
+        let mut next = start + *direction;
+        num_steps = 1;
+        set.clear();
+        set.insert(current);
+
+        while next.is_valid(map[0].len() as i32, map.len() as i32) {
+            // println!(
+            //     "{}: {:?}: {}",
+            //     num_steps, next, map[next.y as usize][next.x as usize]
+            // );
+            set.insert(next);
+            if map[next.y as usize][next.x as usize] == 'S' {
+                loop_found = true;
+                break;
+            } else {
+                num_steps += 1;
+                match current.process(&next, map[next.y as usize][next.x as usize]) {
+                    Some(coordinate) => {
+                        current = next;
+                        next = coordinate;
+                    }
+                    None => {
+                        break;
+                    }
+                }
+            }
+        }
+        if loop_found {
+            break;
+        }
+    }
+    if loop_found {
+        Some((num_steps, set))
+    } else {
+        None
+    }
+}
+
+pub fn part2() {
+    let lines = utils::read_lines("./inputs/day10");
+    let mut map: Vec<Vec<char>> = lines.iter().map(|s| s.chars().collect()).collect();
+    let mut loop_set: HashSet<Coordinate> = HashSet::new();
+
+    for (row_index, row) in map.iter().enumerate() {
+        for (col_index, &character) in row.iter().enumerate() {
+            if character == 'S' {
+                match traverse_pipes_2(&map, Coordinate::new(col_index as i32, row_index as i32)) {
+                    Some((_, set)) => {
+                        loop_set = set;
+                    }
+                    None => {
+                        continue;
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    for y in 0..map.len() {
+        for x in 0..map[0].len() {
+            if !loop_set.contains(&Coordinate {
+                x: x as i32,
+                y: y as i32,
+            }) {
+                map[y][x] = '.';
+            }
+        }
+    }
+    // for coordinate in loop_set {
+    //     map[coordinate.y as usize][coordinate.x as usize] = 'X';
+    // }
+
+    let mut sum = 0;
+
+    for row in map.iter().skip(1).take(map.len() - 2) {
+        for (index, &c) in row.iter().skip(1).enumerate() {
+            if c == '.' {
+                let mut intersection_count = 0;
+                let mut flag_f = false;
+                let mut flag_l = false;
+                for x in row.iter().skip(index + 1) {
+                    match *x {
+                        'F' => {
+                            if flag_f || flag_l {
+                                flag_l = false;
+                            }
+                            flag_f = true;
+                        }
+                        '7' => {
+                            if flag_l {
+                                intersection_count += 1;
+                            }
+                            flag_f = false;
+                            flag_l = false;
+                        }
+                        'L' => {
+                            if flag_f || flag_l {
+                                flag_f = false;
+                            }
+                            flag_l = true;
+                        }
+                        'J' => {
+                            if flag_f {
+                                intersection_count += 1;
+                            }
+                            flag_l = false;
+                            flag_f = false;
+                        }
+                        '|' => {
+                            if flag_f || flag_l {
+                                flag_l = false;
+                                flag_f = false;
+                            }
+                            intersection_count += 1;
+                        }
+                        'S' => {
+                            if flag_f || flag_l {
+                                flag_l = false;
+                                flag_f = false;
+                            }
+                        }
+                        _ => continue,
+                    }
+                }
+                if intersection_count.is_odd() {
+                    sum += 1;
+                }
+            }
+        }
+    }
+    println!("{}", sum);
+}
