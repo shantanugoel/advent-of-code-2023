@@ -44,6 +44,60 @@ fn expand(map: &Vec<Vec<char>>, expansion_factor: u32) -> Vec<Vec<u32>> {
     expanded_map
 }
 
+fn expand2(
+    map: &Vec<Vec<char>>,
+    expansion_factor: u32,
+    rows: &mut Vec<usize>,
+    cols: &mut Vec<usize>,
+) -> Vec<Vec<u32>> {
+    let mut expanded_map: Vec<Vec<u32>> = vec![];
+    let mut galaxy_count = 0;
+    let mut count = 0;
+    for row in map {
+        let mut new_row = vec![0; row.len()];
+        let mut empty_row = true;
+        for col_index in 0..map[0].len() {
+            if row[col_index] != '.' {
+                empty_row = false;
+                galaxy_count += 1;
+                new_row[col_index] = galaxy_count;
+            }
+        }
+        expanded_map.push(new_row.clone());
+        count += 1;
+        if empty_row {
+            rows.push(count);
+            for _ in 0..expansion_factor {
+                count += 1;
+                expanded_map.push(new_row.clone());
+            }
+        }
+    }
+
+    let mut offset = 0;
+    count = 0;
+    for col_index in 0..map[0].len() {
+        count += 1;
+        let mut empty_column = true;
+        for row in expanded_map.iter() {
+            if row[col_index + offset] != 0 {
+                empty_column = false;
+            }
+        }
+        if empty_column {
+            cols.push(count);
+            for _ in 0..expansion_factor {
+                count += 1;
+                offset += 1;
+                for row in expanded_map.iter_mut() {
+                    row.insert(col_index + offset, 0);
+                }
+            }
+        }
+    }
+    expanded_map
+}
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 struct Point(u32, u32);
 
@@ -84,7 +138,7 @@ fn neighbors(point: Point, rows: usize, cols: usize) -> Vec<Point> {
     result
 }
 
-fn dijkstra(matrix: &Vec<Vec<u32>>, start: Point, end: Point) -> Option<u32> {
+fn dijkstra(matrix: &Vec<Vec<u32>>, start: Point, end: Point) -> Option<(u32, Point, Point)> {
     let rows = matrix.len();
     let cols = matrix[0].len();
 
@@ -100,7 +154,7 @@ fn dijkstra(matrix: &Vec<Vec<u32>>, start: Point, end: Point) -> Option<u32> {
 
     while let Some(State { point, steps }) = heap.pop() {
         if point == end {
-            return Some(steps);
+            return Some((steps, start, end));
         }
 
         if visited.contains(&point) {
@@ -144,7 +198,7 @@ pub fn part1() {
             if *origin == *destination {
                 continue;
             }
-            if let Some(distance) = dijkstra(&expanded_map, *origin, *destination) {
+            if let Some((distance, _, _)) = dijkstra(&expanded_map, *origin, *destination) {
                 count += 1;
                 sum += distance;
             }
@@ -155,11 +209,12 @@ pub fn part1() {
 }
 
 pub fn part2() {
-    let lines = utils::read_lines("./inputs/day11_sample");
+    let lines = utils::read_lines("./inputs/day11");
     let map: Vec<Vec<char>> = lines.iter().map(|s| s.chars().collect()).collect();
-    let expanded_map = expand(&map, 1_00 - 1);
+    let mut rows: Vec<usize> = vec![];
+    let mut cols: Vec<usize> = vec![];
+    let expanded_map = expand2(&map, 10 - 1, &mut rows, &mut cols);
     let mut galaxies: Vec<Point> = vec![];
-    println!("====");
     for (row_index, row) in expanded_map.iter().enumerate() {
         for (col_index, col) in row.iter().enumerate() {
             if *col != 0 {
@@ -167,7 +222,6 @@ pub fn part2() {
             }
         }
     }
-    println!("====");
     let mut sum = 0;
     let mut count = 0;
     let mut permutations: Vec<(Point, Point)> = vec![];
@@ -186,9 +240,36 @@ pub fn part2() {
             .map(|chunk| s.spawn(|_| dijkstra(&expanded_map, chunk.0, chunk.1)))
             .collect();
         for handle in handles {
-            if let Some(distance) = handle.join().unwrap() {
+            if let Some((distance, start, end)) = handle.join().unwrap() {
                 count += 1;
-                sum += distance;
+                let mut expanded_rows = 0;
+                let mut expanded_cols = 0;
+                for y in rows.iter() {
+                    if (*y >= start.0 as usize && *y <= end.0 as usize)
+                        || (*y <= start.0 as usize && *y >= end.0 as usize)
+                    {
+                        expanded_rows += 1;
+                    }
+                }
+
+                for x in cols.iter() {
+                    if (*x >= start.1 as usize && *x <= end.1 as usize)
+                        || (*x <= start.1 as usize && *x >= end.1 as usize)
+                    {
+                        expanded_cols += 1;
+                    }
+                }
+                let mut row_factor: u64 = 0;
+                let mut col_factor: u64 = 0;
+                for _ in 0..expanded_rows {
+                    row_factor += 100_000 - 1;
+                }
+                for _ in 0..expanded_cols {
+                    col_factor += 100_000 - 1;
+                }
+
+                let distance2: u64 = distance as u64 + (row_factor + col_factor) * 10;
+                sum += distance2;
             }
         }
     })
