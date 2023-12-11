@@ -1,8 +1,9 @@
 use crate::utils;
+use crossbeam::thread;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, HashSet};
 
-fn expand(map: &Vec<Vec<char>>) -> Vec<Vec<u32>> {
+fn expand(map: &Vec<Vec<char>>, expansion_factor: u32) -> Vec<Vec<u32>> {
     let mut expanded_map: Vec<Vec<u32>> = vec![];
     let mut galaxy_count = 0;
     for row in map {
@@ -17,7 +18,9 @@ fn expand(map: &Vec<Vec<char>>) -> Vec<Vec<u32>> {
         }
         expanded_map.push(new_row.clone());
         if empty_row {
-            expanded_map.push(new_row);
+            for _ in 0..expansion_factor {
+                expanded_map.push(new_row.clone());
+            }
         }
     }
 
@@ -30,9 +33,11 @@ fn expand(map: &Vec<Vec<char>>) -> Vec<Vec<u32>> {
             }
         }
         if empty_column {
-            offset += 1;
-            for row in expanded_map.iter_mut() {
-                row.insert(col_index + offset, 0);
+            for _ in 0..expansion_factor {
+                offset += 1;
+                for row in expanded_map.iter_mut() {
+                    row.insert(col_index + offset, 0);
+                }
             }
         }
     }
@@ -121,9 +126,9 @@ fn dijkstra(matrix: &Vec<Vec<u32>>, start: Point, end: Point) -> Option<u32> {
 }
 
 pub fn part1() {
-    let lines = utils::read_lines("./inputs/day11");
+    let lines = utils::read_lines("./inputs/day11_sample");
     let map: Vec<Vec<char>> = lines.iter().map(|s| s.chars().collect()).collect();
-    let expanded_map = expand(&map);
+    let expanded_map = expand(&map, 1);
     let mut galaxies: Vec<Point> = vec![];
     for (row_index, row) in expanded_map.iter().enumerate() {
         for (col_index, col) in row.iter().enumerate() {
@@ -149,4 +154,45 @@ pub fn part1() {
     println!("{} {}", count, sum);
 }
 
-pub fn part2() {}
+pub fn part2() {
+    let lines = utils::read_lines("./inputs/day11_sample");
+    let map: Vec<Vec<char>> = lines.iter().map(|s| s.chars().collect()).collect();
+    let expanded_map = expand(&map, 1_000_000 - 1);
+    let mut galaxies: Vec<Point> = vec![];
+    println!("====");
+    for (row_index, row) in expanded_map.iter().enumerate() {
+        for (col_index, col) in row.iter().enumerate() {
+            if *col != 0 {
+                galaxies.push(Point(row_index as u32, col_index as u32));
+            }
+        }
+    }
+    println!("====");
+    let mut sum = 0;
+    let mut count = 0;
+    let mut permutations: Vec<(Point, Point)> = vec![];
+    for (index, origin) in galaxies.iter().enumerate() {
+        for destination in galaxies.iter().skip(index) {
+            if *origin == *destination {
+                continue;
+            }
+            permutations.push((*origin, *destination));
+        }
+    }
+
+    thread::scope(|s| {
+        let handles: Vec<_> = permutations
+            .iter()
+            .map(|chunk| s.spawn(|_| dijkstra(&expanded_map, chunk.0, chunk.1)))
+            .collect();
+        for handle in handles {
+            if let Some(distance) = handle.join().unwrap() {
+                count += 1;
+                sum += distance;
+            }
+        }
+    })
+    .unwrap();
+
+    println!("{} {}", count, sum);
+}
