@@ -1,6 +1,5 @@
-use std::collections::HashSet;
-
 use num_integer::Integer;
+use plotters::prelude::*;
 
 use crate::utils;
 
@@ -151,10 +150,7 @@ pub fn part1() {
     }
 }
 
-fn traverse_pipes_2(
-    map: &Vec<Vec<char>>,
-    start: Coordinate,
-) -> Option<(usize, HashSet<Coordinate>)> {
+fn traverse_pipes_2(map: &Vec<Vec<char>>, start: Coordinate) -> Option<(usize, Vec<Coordinate>)> {
     let mut num_steps = 0;
     let mut loop_found = false;
     let directions_to_process = [
@@ -163,20 +159,20 @@ fn traverse_pipes_2(
         Coordinate { x: 1, y: 0 },
         Coordinate { x: -1, y: 0 },
     ];
-    let mut set: HashSet<Coordinate> = HashSet::new();
+    let mut set: Vec<Coordinate> = vec![];
     for direction in directions_to_process.iter() {
         let mut current = start;
         let mut next = start + *direction;
         num_steps = 1;
         set.clear();
-        set.insert(current);
+        set.push(current);
 
         while next.is_valid(map[0].len() as i32, map.len() as i32) {
             // println!(
             //     "{}: {:?}: {}",
             //     num_steps, next, map[next.y as usize][next.x as usize]
             // );
-            set.insert(next);
+            set.push(next);
             if map[next.y as usize][next.x as usize] == 'S' {
                 loop_found = true;
                 break;
@@ -207,7 +203,7 @@ fn traverse_pipes_2(
 pub fn part2() {
     let lines = utils::read_lines("./inputs/day10");
     let mut map: Vec<Vec<char>> = lines.iter().map(|s| s.chars().collect()).collect();
-    let mut loop_set: HashSet<Coordinate> = HashSet::new();
+    let mut loop_set: Vec<Coordinate> = vec![];
 
     for (row_index, row) in map.iter().enumerate() {
         for (col_index, &character) in row.iter().enumerate() {
@@ -235,6 +231,35 @@ pub fn part2() {
             }
         }
     }
+
+    const OUT_FILE_NAME: &str = "animation.gif";
+    let root = BitMapBackend::gif(OUT_FILE_NAME, (800, 800), 1)
+        .unwrap()
+        .into_drawing_area();
+
+    let mut chart = ChartBuilder::on(&root)
+        .build_cartesian_2d(0..map[0].len(), map.len()..0)
+        .unwrap();
+    let mut series: Vec<(usize, usize)> = vec![];
+    root.fill(&WHITE).unwrap();
+    for point in loop_set {
+        chart
+            .configure_mesh()
+            .disable_x_mesh()
+            .disable_y_mesh()
+            .draw()
+            .unwrap();
+        series.push((point.x as usize, point.y as usize));
+        chart
+            .draw_series(LineSeries::new(series.iter().cloned(), &RED))
+            .unwrap();
+    }
+    root.present().unwrap();
+    // for (y_index, y) in map.iter().enumerate() {
+    //     for (x_index, x) in y.iter().enumerate() {
+    //         series.push()
+    //     }
+    // }
 
     let mut sum = 0;
 
