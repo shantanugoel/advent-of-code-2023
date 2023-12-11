@@ -157,7 +157,7 @@ pub fn part1() {
 pub fn part2() {
     let lines = utils::read_lines("./inputs/day11_sample");
     let map: Vec<Vec<char>> = lines.iter().map(|s| s.chars().collect()).collect();
-    let expanded_map = expand(&map, 1_000_000 - 1);
+    let expanded_map = expand(&map, 1_00 - 1);
     let mut galaxies: Vec<Point> = vec![];
     println!("====");
     for (row_index, row) in expanded_map.iter().enumerate() {
