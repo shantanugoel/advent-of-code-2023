@@ -253,8 +253,8 @@ pub fn part2() {
         chart
             .draw_series(LineSeries::new(series.iter().cloned(), &RED))
             .unwrap();
+        root.present().unwrap();
     }
-    root.present().unwrap();
     // for (y_index, y) in map.iter().enumerate() {
     //     for (x_index, x) in y.iter().enumerate() {
     //         series.push()
