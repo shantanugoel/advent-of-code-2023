@@ -308,20 +308,27 @@ pub fn part2() {
         });
     }
 
-    thread::scope(|s| {
+    let result = thread::scope(|s| {
         let handles: Vec<_> = r
             .iter()
             .map(|r| {
                 s.spawn(|_| {
                     let mut s = 0;
                     parse_record(&r.s1, &r.s2, State::Undamaged, 0, &mut s);
+                    unsafe {
+                        static mut p: u32 = 0;
+                        p += 1;
+                        println!("{}", p);
+                    }
                     s
                 })
             })
             .collect();
         for handle in handles {
             sum += handle.join().unwrap();
+            println!("sum: {}", sum);
         }
+        sum
     })
     .unwrap();
 
@@ -338,5 +345,5 @@ pub fn part2() {
     //         &mut x,
     //     );
     // }
-    println!("{} ", sum);
+    println!("{} ", result);
 }
