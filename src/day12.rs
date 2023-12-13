@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 
 use crate::utils;
-use crossbeam::thread;
 use lazy_static::lazy_static;
 
 lazy_static! {
