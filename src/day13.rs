@@ -108,7 +108,7 @@ fn compute(pattern: &Vec<String>, lines: usize) -> usize {
 }
 
 pub fn part2() {
-    let patterns = form_data("./inputs/day13_sample2");
+    let patterns = form_data("./inputs/day13");
     let mut sum = 0;
 
     for pattern in patterns.clone() {
