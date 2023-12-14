@@ -154,6 +154,9 @@ pub fn part2() {
             println!("2H {} {} {:?}", lines, new_lines, p);
             sum += new_lines;
         }
+        if new_lines == 0 {
+            println!("FOUNd0==========={:?}", p);
+        }
     }
     println!("{}", sum);
 }
