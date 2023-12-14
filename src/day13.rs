@@ -31,37 +31,14 @@ fn transpose(pattern: &Vec<String>) -> Vec<String> {
 
 fn find(pattern: &Vec<String>) -> usize {
     let length = pattern.len();
-    let forward_iter = pattern.iter();
-    let rev_iter = pattern.iter().rev();
     let mut count = 0;
-    // for (outer_index, _) in forward_iter.clone().enumerate() {
-    //     let mut mismatch: bool = false;
-    //     let temp_forward = forward_iter.clone().skip(outer_index);
-    //     for (index, temp_line) in temp_forward.enumerate() {
-    //         println!(
-    //             "Comparing {} with {}",
-    //             temp_line,
-    //             pattern[length - 1 - index]
-    //         );
-    //         if *temp_line != pattern[length - 1 - index] {
-    //             mismatch = true;
-    //             break;
-    //         } else if index >= length - 1 - index {
-    //             count = index + outer_index;
-    //             break;
-    //         }
-    //     }
-    //     if !mismatch {
-    //         break;
-    //     }
-    // }
 
-    println!("{}", length);
+    // println!("{}", length);
     for i in 0..length - 1 {
-        println!("Searching mirror at {}", i);
+        // println!("Searching mirror at {}", i);
         let mut mirror_found = false;
         for (j, k) in (0..=i).rev().zip(i + 1..length) {
-            println!("Compareing {} {} {} {}", j, k, pattern[i], pattern[j]);
+            // println!("Compareing {} {} {} {}", j, k, pattern[i], pattern[j]);
             if pattern[j] != pattern[k] {
                 mirror_found = false;
                 break;
@@ -73,7 +50,7 @@ fn find(pattern: &Vec<String>) -> usize {
             break;
         }
     }
-    println!("{}", count);
+    // println!("{}", count);
     count
 }
 
@@ -92,7 +69,7 @@ pub fn part1() {
     }
 
     for pattern in remaining_patterns {
-        println!("{:?}", pattern);
+        // println!("{:?}", pattern);
         let lines = find(&transpose(&pattern));
         if lines == 0 {
             panic!("remaining 0");
