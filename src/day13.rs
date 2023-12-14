@@ -18,53 +18,72 @@ fn form_data(path: &str) -> Vec<Vec<String>> {
 }
 
 fn transpose(pattern: &Vec<String>) -> Vec<String> {
-    println!("{:?}", pattern);
+    // println!("{:?}", pattern);
     let mut temp: Vec<String> = vec!["".to_string(); pattern[0].len()];
     for line in pattern {
         for (i, c) in line.chars().enumerate() {
             temp[i].push_str(&c.to_string());
         }
     }
-    println!("{:?}", temp);
+    // println!("{:?}", temp);
     temp
 }
 
 fn find(pattern: &Vec<String>) -> usize {
     let length = pattern.len();
     let forward_iter = pattern.iter();
+    let rev_iter = pattern.iter().rev();
     let mut count = 0;
-    for (outer_index, _) in forward_iter.clone().enumerate() {
-        let mut mismatch: bool = false;
-        let temp_forward = forward_iter.clone().skip(outer_index);
-        for (index, temp_line) in temp_forward.enumerate() {
-            println!(
-                "Comparing {} with {}",
-                temp_line,
-                pattern[length - 1 - index]
-            );
-            if *temp_line != pattern[length - 1 - index] {
-                mismatch = true;
-                break;
-            } else if index >= length - 1 - index {
-                count = index + outer_index;
+    // for (outer_index, _) in forward_iter.clone().enumerate() {
+    //     let mut mismatch: bool = false;
+    //     let temp_forward = forward_iter.clone().skip(outer_index);
+    //     for (index, temp_line) in temp_forward.enumerate() {
+    //         println!(
+    //             "Comparing {} with {}",
+    //             temp_line,
+    //             pattern[length - 1 - index]
+    //         );
+    //         if *temp_line != pattern[length - 1 - index] {
+    //             mismatch = true;
+    //             break;
+    //         } else if index >= length - 1 - index {
+    //             count = index + outer_index;
+    //             break;
+    //         }
+    //     }
+    //     if !mismatch {
+    //         break;
+    //     }
+    // }
+
+    println!("{}", length);
+    for i in 0..length - 1 {
+        println!("Searching mirror at {}", i);
+        let mut mirror_found = false;
+        for (j, k) in (0..=i).rev().zip(i + 1..length) {
+            println!("Compareing {} {} {} {}", j, k, pattern[i], pattern[j]);
+            if pattern[j] != pattern[k] {
+                mirror_found = false;
                 break;
             }
+            mirror_found = true;
         }
-        if !mismatch {
+        if mirror_found {
+            count = i + 1;
             break;
         }
     }
+    println!("{}", count);
     count
 }
 
 pub fn part1() {
-    let patterns = form_data("./inputs/day13_sample");
+    let patterns = form_data("./inputs/day13");
 
     let mut remaining_patterns: Vec<Vec<String>> = vec![];
 
     let mut sum = 0;
-    for pattern in patterns {
-        println!("{:?}", pattern);
+    for pattern in patterns.clone() {
         let lines = find(&pattern);
         if lines == 0 {
             remaining_patterns.push(pattern);
@@ -73,7 +92,11 @@ pub fn part1() {
     }
 
     for pattern in remaining_patterns {
+        println!("{:?}", pattern);
         let lines = find(&transpose(&pattern));
+        if lines == 0 {
+            panic!("remaining 0");
+        }
         sum += lines;
     }
     println!("{}", sum);
