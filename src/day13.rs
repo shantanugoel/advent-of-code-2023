@@ -119,7 +119,7 @@ pub fn part2() {
 
         if lines != 0 {
             new_lines = compute(&pattern, lines);
-            println!("1H {} {} {:?}", lines, new_lines, pattern.clone());
+            // println!("1H {} {} {:?}", lines, new_lines, pattern.clone());
             sum += 100 * new_lines;
         } else {
             let p = transpose(&pattern);
@@ -128,7 +128,7 @@ pub fn part2() {
             if lines != 0 {
                 new_lines = compute(&p, lines);
             }
-            println!("1V {} {} {:?}", lines, new_lines, pattern);
+            // println!("1V {} {} {:?}", lines, new_lines, pattern);
             sum += new_lines;
         }
         if new_lines == 0 {
@@ -136,14 +136,14 @@ pub fn part2() {
         }
     }
 
-    for p in remaining_patterns {
+    for p in remaining_patterns.clone() {
         let pattern = transpose(&p);
         let mut lines = find(&pattern);
         let mut new_lines;
 
         if lines != 0 {
             new_lines = compute(&p, 0);
-            println!("2V {} {} {:?}", lines, new_lines, p.clone());
+            // println!("2V {} {} {:?}", lines, new_lines, p.clone());
             sum += 100 * new_lines;
         } else {
             lines = find(&p);
@@ -151,12 +151,13 @@ pub fn part2() {
             if lines != 0 {
                 new_lines = compute(&pattern, 0);
             }
-            println!("2H {} {} {:?}", lines, new_lines, p);
+            // println!("2H {} {} {:?}", lines, new_lines, p);
             sum += new_lines;
         }
         if new_lines == 0 {
             println!("FOUNd0==========={:?}", p);
         }
     }
+    println!("{} {}", patterns.len(), remaining_patterns.len());
     println!("{}", sum);
 }
