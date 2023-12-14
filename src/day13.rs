@@ -38,7 +38,7 @@ fn find(pattern: &Vec<String>) -> usize {
         // println!("Searching mirror at {}", i);
         let mut mirror_found = false;
         for (j, k) in (0..=i).rev().zip(i + 1..length) {
-            // println!("Compareing {} {} {} {}", j, k, pattern[i], pattern[j]);
+            // println!("Compareing {} {} {} {}", j, k, pattern[j], pattern[k]);
             if pattern[j] != pattern[k] {
                 mirror_found = false;
                 break;
@@ -79,4 +79,81 @@ pub fn part1() {
     println!("{}", sum);
 }
 
-pub fn part2() {}
+fn compute(pattern: &Vec<String>, lines: usize) -> usize {
+    let mut new_lines = 0;
+    let mut found = false;
+    for i in 0..pattern.len() {
+        for j in 0..pattern[0].len() {
+            let mut new_pattern = pattern.clone();
+            if new_pattern[i].chars().nth(j).unwrap() == '#' {
+                new_pattern[i].replace_range(j..j + 1, ".");
+            } else {
+                new_pattern[i].replace_range(j..j + 1, "#");
+            }
+            // println!("{} {}: {:?}", i, j, new_pattern);
+            new_lines = find(&new_pattern);
+            if new_lines != 0 && new_lines != lines {
+                println!("{} {} {} ", i, j, new_lines);
+                found = true;
+                break;
+            }
+        }
+        if found {
+            break;
+        } else {
+            new_lines = 0;
+        }
+    }
+    new_lines
+}
+
+pub fn part2() {
+    let patterns = form_data("./inputs/day13");
+
+    let mut remaining_patterns: Vec<Vec<String>> = vec![];
+
+    let mut sum = 0;
+    for pattern in patterns.clone() {
+        let mut lines = find(&pattern);
+        let mut new_lines;
+
+        if lines != 0 {
+            new_lines = compute(&pattern, lines);
+            println!("1H {} {} {:?}", lines, new_lines, pattern.clone());
+            sum += 100 * new_lines;
+        } else {
+            let p = transpose(&pattern);
+            lines = find(&p);
+            new_lines = 0;
+            if lines != 0 {
+                new_lines = compute(&p, lines);
+            }
+            println!("1V {} {} {:?}", lines, new_lines, pattern);
+            sum += new_lines;
+        }
+        if new_lines == 0 {
+            remaining_patterns.push(pattern);
+        }
+    }
+
+    for p in remaining_patterns {
+        let pattern = transpose(&p);
+        let mut lines = find(&pattern);
+        let mut new_lines;
+
+        if lines != 0 {
+            new_lines = compute(&p, 0);
+            println!("2V {} {} {:?}", lines, new_lines, p.clone());
+            sum += 100 * new_lines;
+        } else {
+            lines = find(&p);
+            new_lines = 0;
+            if lines != 0 {
+                new_lines = compute(&pattern, 0);
+            }
+            println!("2H {} {} {:?}", lines, new_lines, p);
+            sum += new_lines;
+        }
+    }
+    println!("{}", sum);
+}
