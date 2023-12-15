@@ -83,9 +83,13 @@ fn tilt(input: &Vec<String>, direction: Direction) -> Vec<String> {
 fn cycle(input: &Vec<String>) -> Vec<String> {
     let mut output: Vec<String>;
     output = tilt(input, Direction::North);
+    println!("{:?}", output);
     output = tilt(&output, Direction::West);
+    println!("{:?}", output);
     output = tilt(&output, Direction::South);
+    println!("{:?}", output);
     output = tilt(&output, Direction::East);
+    println!("{:?}", output);
     output
 }
 
@@ -121,7 +125,8 @@ fn compute(input: &Vec<String>) -> usize {
 pub fn part2() {
     let lines = get_input("./inputs/day14");
     let mut weight = 0;
-    for i in 0..1000000000 {
+    // for i in 0..1000000000 {
+    for i in 0..1 {
         println!("{}: {}", i, weight);
         weight = compute(&cycle(&lines));
     }
