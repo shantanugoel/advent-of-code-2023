@@ -1,6 +1,14 @@
-use core::panic;
-
 use crate::utils;
+use lazy_static::lazy_static;
+use std::collections::HashMap;
+use std::sync::Mutex;
+
+lazy_static! {
+    static ref CACHE: Mutex<HashMap<Vec<String>, usize>> = {
+        let map = HashMap::new();
+        Mutex::new(map)
+    };
+}
 
 fn transpose(pattern: &Vec<String>) -> Vec<String> {
     let mut temp: Vec<String> = vec!["".to_string(); pattern[0].len()];
@@ -19,7 +27,7 @@ fn get_input(path: &str) -> Vec<String> {
 }
 
 pub fn part1() {
-    let lines = get_input("./inputs/day14_sample");
+    let lines = transpose(&get_input("./inputs/day14_sample"));
     let length = lines[0].len();
     let mut weight = 0;
     let mut spaces: Vec<usize> = vec![];
@@ -52,15 +60,7 @@ pub fn part1() {
 #[derive(PartialEq, Eq)]
 enum FlipDirection {
     Horizontal,
-    Vertical,
-}
-
-#[derive(PartialEq, Eq)]
-enum Direction {
-    North,
-    West,
-    South,
-    East,
+    // Vertical,
 }
 
 fn flip(input: &Vec<String>, direction: FlipDirection) -> Vec<String> {
@@ -71,15 +71,6 @@ fn flip(input: &Vec<String>, direction: FlipDirection) -> Vec<String> {
             .collect()
     } else {
         input.iter().rev().cloned().collect()
-    }
-}
-
-fn tilt(input: &Vec<String>, direction: Direction) -> Vec<String> {
-    match direction {
-        Direction::North => transpose(input),
-        Direction::West => flip(input, FlipDirection::Horizontal),
-        Direction::East => flip(input, FlipDirection::Vertical),
-        Direction::South => flip(&transpose(input), FlipDirection::Horizontal),
     }
 }
 
@@ -114,15 +105,14 @@ fn slide(input: &Vec<String>) -> Vec<String> {
 
 fn cycle(input: &Vec<String>, loop_count: usize) -> Vec<String> {
     let mut output: Vec<String> = input.clone();
+    let mut remaining = 0;
+    let mut initial = 0;
     for i in 0..loop_count {
         if i % 100000 == 0 {
             println!("{}", i);
         }
         output = transpose(&slide(&transpose(&output)));
-        // println!("{:?}", output);
         output = slide(&output);
-        // println!("{:?}", output);
-        // println!("{:?}", output);
         output = transpose(&flip(
             &slide(&flip(&transpose(&output), FlipDirection::Horizontal)),
             FlipDirection::Horizontal,
@@ -131,7 +121,28 @@ fn cycle(input: &Vec<String>, loop_count: usize) -> Vec<String> {
             &slide(&flip(&output, FlipDirection::Horizontal)),
             FlipDirection::Horizontal,
         );
-        // println!("{:?}", output);
+        let mut cache = CACHE.lock().unwrap();
+        if cache.contains_key(&output) {
+            let x = cache.get_key_value(&output).unwrap();
+            remaining = (loop_count - x.1 - 1) % (i - x.1);
+            initial = *x.1 + 1;
+            break;
+        } else {
+            cache.insert(output.clone(), i);
+        }
+    }
+    output = input.clone();
+    for _ in 0..(initial + remaining) {
+        output = transpose(&slide(&transpose(&output)));
+        output = slide(&output);
+        output = transpose(&flip(
+            &slide(&flip(&transpose(&output), FlipDirection::Horizontal)),
+            FlipDirection::Horizontal,
+        ));
+        output = flip(
+            &slide(&flip(&output, FlipDirection::Horizontal)),
+            FlipDirection::Horizontal,
+        );
     }
     output
 }
@@ -144,28 +155,16 @@ fn compute(input: &Vec<String>) -> usize {
         spaces.clear();
         for (i, c) in line.chars().enumerate() {
             match c {
-                'O' => {
-                    if spaces.is_empty() {
-                        weight += length - i;
-                    } else {
-                        weight += spaces[0];
-                        spaces.remove(0);
-                        spaces.push(length - i);
-                    }
-                }
-                '.' => spaces.push(length - i),
-                '#' => spaces.clear(),
+                'O' => weight += length - i,
                 _ => continue,
             }
         }
     }
     weight
 }
+
 pub fn part2() {
-    let lines = get_input("./inputs/day14_sample");
-    // let weight = compute(&cycle(&lines, 1000000000));
-    // 10000000
-    // 1000000000
-    let weight = compute(&transpose(&cycle(&lines, 10)));
+    let lines = get_input("./inputs/day14");
+    let weight = compute(&transpose(&cycle(&lines, 1000000000)));
     println!("weight {}", weight);
 }
