@@ -177,4 +177,44 @@ pub fn part1() {
     println!("{}", energized_tiles.len());
 }
 
-pub fn part2() {}
+pub fn part2() {
+    let input: Vec<Vec<char>> = utils::read_lines("./inputs/day16")
+        .iter()
+        .map(|s| s.chars().collect())
+        .collect();
+
+    let mut initial_beams: Vec<Beam> = vec![];
+    for y in 0..input.len() {
+        for x in 0..input[0].len() {
+            if y == 0 {
+                initial_beams.push(Beam::new(BeamDirection::Down, Position { x, y }));
+            }
+            if x == 0 {
+                initial_beams.push(Beam::new(BeamDirection::Right, Position { x, y }));
+            }
+            if y == input.len() - 1 {
+                initial_beams.push(Beam::new(BeamDirection::Up, Position { x, y }));
+            }
+            if x == input[0].len() - 1 {
+                initial_beams.push(Beam::new(BeamDirection::Left, Position { x, y }));
+            }
+        }
+    }
+
+    let mut max_energized_tiles = 0;
+    for initial_beam in initial_beams {
+        // let initial_beam = Beam::new(BeamDirection::Right, Position { x: 0, y: 0 });
+        let mut energized_tiles: HashSet<(usize, usize)> = HashSet::new();
+        let mut existing_beams: HashSet<Beam> = HashSet::new();
+        traverse(
+            &input,
+            initial_beam,
+            &mut energized_tiles,
+            &mut existing_beams,
+        );
+        if energized_tiles.len() > max_energized_tiles {
+            max_energized_tiles = energized_tiles.len();
+        }
+    }
+    println!("{}", max_energized_tiles);
+}
