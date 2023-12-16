@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::utils;
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]
 enum BeamDirection {
     Up,
     Down,
@@ -33,7 +33,7 @@ impl BeamDirection {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]
 struct Position {
     x: usize,
     y: usize,
@@ -41,11 +41,15 @@ struct Position {
 
 impl Position {
     pub fn is_valid(&self, width: usize, height: usize) -> bool {
+        // println!(
+        //     "Position::is_valid: {}, {}, {}, {}",
+        //     self.x, self.y, width, height
+        // );
         self.x < width && self.y < height && self.x as i32 >= 0 && self.y as i32 >= 0
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]
 struct Beam {
     direction: BeamDirection,
     position: Position,
@@ -53,7 +57,7 @@ struct Beam {
 
 impl Beam {
     pub fn new(direction: BeamDirection, position: Position) -> Beam {
-        println!("=============>New Beam");
+        // println!("=============>New Beam");
         Beam {
             direction,
             position,
@@ -138,30 +142,38 @@ fn traverse(
     input: &Vec<Vec<char>>,
     initial_beam: Beam,
     energized_tiles: &mut HashSet<(usize, usize)>,
+    existing_beams: &mut HashSet<Beam>,
 ) {
     let width = input[0].len();
     let height = input.len();
     let mut beam = initial_beam;
-    println!("Traverse Begin {:?}", beam);
+    // println!("Traverse Begin {:?}", beam);
 
-    while beam.position.is_valid(width, height) {
+    while beam.position.is_valid(width, height) && !existing_beams.contains(&beam) {
+        existing_beams.insert(beam);
         let tile = input[beam.position.y][beam.position.x];
-        println!("{},{}", beam.position.x, beam.position.y);
+        // println!("{},{}", beam.position.x, beam.position.y);
         energized_tiles.insert((beam.position.y, beam.position.x));
         if let Some(new_beam) = beam.move_forward(tile) {
-            traverse(input, new_beam, energized_tiles);
+            traverse(input, new_beam, energized_tiles, existing_beams);
         }
     }
 }
 
 pub fn part1() {
-    let input: Vec<Vec<char>> = utils::read_lines("./inputs/day16_sample")
+    let input: Vec<Vec<char>> = utils::read_lines("./inputs/day16")
         .iter()
         .map(|s| s.chars().collect())
         .collect();
     let initial_beam = Beam::new(BeamDirection::Right, Position { x: 0, y: 0 });
     let mut energized_tiles: HashSet<(usize, usize)> = HashSet::new();
-    traverse(&input, initial_beam, &mut energized_tiles);
+    let mut existing_beams: HashSet<Beam> = HashSet::new();
+    traverse(
+        &input,
+        initial_beam,
+        &mut energized_tiles,
+        &mut existing_beams,
+    );
     println!("{}", energized_tiles.len());
 }
 
