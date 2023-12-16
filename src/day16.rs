@@ -203,7 +203,6 @@ pub fn part2() {
 
     let mut max_energized_tiles = 0;
     for initial_beam in initial_beams {
-        // let initial_beam = Beam::new(BeamDirection::Right, Position { x: 0, y: 0 });
         let mut energized_tiles: HashSet<(usize, usize)> = HashSet::new();
         let mut existing_beams: HashSet<Beam> = HashSet::new();
         traverse(
