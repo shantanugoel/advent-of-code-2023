@@ -142,7 +142,9 @@ fn traverse(
             && new_lava.position.is_valid(width, height)
             && !new_lava.position.reached_factory(width, height)
         {
-            println!("{}", lava_queue.len());
+            if lava_queue.len() % 10000 == 0 {
+                println!("{}", lava_queue.len());
+            }
             // println!("Loop lava {:?}", new_lava);
             let key = (
                 new_lava.direction,
