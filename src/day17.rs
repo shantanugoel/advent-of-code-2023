@@ -102,7 +102,7 @@ impl Lava {
         self.valid
     }
 
-    pub fn move_forward(&mut self, ultra: bool) -> Vec<Lava> {
+    pub fn move_forward(&mut self, ultra: bool, start: bool) -> Vec<Lava> {
         let mut lavas: Vec<Lava> = vec![];
         let mut min_straight_blocks = 0;
         let mut max_straight_blocks = 2;
@@ -124,7 +124,9 @@ impl Lava {
             lavas.push(lava);
         }
         if self.straight_moved < max_straight_blocks {
-            self.straight_moved += 1;
+            if !start {
+                self.straight_moved += 1;
+            }
             self.position = self.direction.next_natural_position(&self.position);
         } else {
             self.valid = false;
@@ -145,6 +147,7 @@ fn traverse(
     // println!("New Lava {:?}", initial_lava);
     // let mut new_lava = initial_lava;
     let mut lava_queue: VecDeque<Lava> = VecDeque::from(vec![initial_lava]);
+    let mut start = true;
 
     while let Some(mut new_lava) = lava_queue.pop_front() {
         while new_lava.is_valid()
@@ -168,7 +171,10 @@ fn traverse(
                 existing_paths.insert(key, new_lava.heat_loss);
             }
             // new_lava.heat_loss += input[new_lava.position.y][new_lava.position.x];
-            let mut lavas = new_lava.move_forward(ultra);
+            let mut lavas = new_lava.move_forward(ultra, start);
+            if start {
+                start = false;
+            }
             if new_lava.position.is_valid(width, height) {
                 new_lava.heat_loss += input[new_lava.position.y][new_lava.position.x];
             }
@@ -215,7 +221,7 @@ pub fn part2() {
                 .collect()
         })
         .collect();
-    input[0][0] = 0;
+    // input[0][0] = 0;
     let mut losses: Vec<usize> = vec![];
     let initial_lava = Lava::new(LavaDirection::Right, Position { x: 0, y: 0 }, 0, 0);
     let mut existing_paths: HashMap<(LavaDirection, Position, usize), usize> = HashMap::new();
