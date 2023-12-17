@@ -102,20 +102,28 @@ impl Lava {
         self.valid
     }
 
-    pub fn move_forward(&mut self) -> Vec<Lava> {
+    pub fn move_forward(&mut self, ultra: bool) -> Vec<Lava> {
         let mut lavas: Vec<Lava> = vec![];
-        let mut lava = Lava::new(self.direction.turn_left(), self.position, 0, self.heat_loss);
-        lava.position = lava.direction.next_natural_position(&self.position);
-        lavas.push(lava);
-        lava = Lava::new(
-            self.direction.turn_right(),
-            self.position,
-            0,
-            self.heat_loss,
-        );
-        lava.position = lava.direction.next_natural_position(&self.position);
-        lavas.push(lava);
-        if self.straight_moved < 2 {
+        let mut min_straight_blocks = 0;
+        let mut max_straight_blocks = 2;
+        if ultra {
+            min_straight_blocks = 3;
+            max_straight_blocks = 9;
+        }
+        if self.straight_moved >= min_straight_blocks {
+            let mut lava = Lava::new(self.direction.turn_left(), self.position, 0, self.heat_loss);
+            lava.position = lava.direction.next_natural_position(&self.position);
+            lavas.push(lava);
+            lava = Lava::new(
+                self.direction.turn_right(),
+                self.position,
+                0,
+                self.heat_loss,
+            );
+            lava.position = lava.direction.next_natural_position(&self.position);
+            lavas.push(lava);
+        }
+        if self.straight_moved < max_straight_blocks {
             self.straight_moved += 1;
             self.position = self.direction.next_natural_position(&self.position);
         } else {
@@ -130,6 +138,7 @@ fn traverse(
     initial_lava: Lava,
     losses: &mut Vec<usize>,
     existing_paths: &mut HashMap<(LavaDirection, Position, usize), usize>,
+    ultra: bool,
 ) {
     let width = input[0].len();
     let height = input.len();
@@ -143,7 +152,7 @@ fn traverse(
             && !new_lava.position.reached_factory(width, height)
         {
             if lava_queue.len() % 10000 == 0 {
-                println!("{}", lava_queue.len());
+                // println!("{}", lava_queue.len());
             }
             // println!("Loop lava {:?}", new_lava);
             let key = (
@@ -159,7 +168,7 @@ fn traverse(
                 existing_paths.insert(key, new_lava.heat_loss);
             }
             // new_lava.heat_loss += input[new_lava.position.y][new_lava.position.x];
-            let mut lavas = new_lava.move_forward();
+            let mut lavas = new_lava.move_forward(ultra);
             if new_lava.position.is_valid(width, height) {
                 new_lava.heat_loss += input[new_lava.position.y][new_lava.position.x];
             }
@@ -171,7 +180,9 @@ fn traverse(
                 }
             }
         }
-        if new_lava.position.reached_factory(width, height) {
+        if new_lava.position.reached_factory(width, height)
+            && (!ultra || new_lava.straight_moved >= 3)
+        {
             // println!("Adding Loss {} to {:?}", initial_lava.heat_loss, losses);
             losses.push(new_lava.heat_loss);
         }
@@ -179,6 +190,23 @@ fn traverse(
 }
 
 pub fn part1() {
+    let mut input: Vec<Vec<usize>> = utils::read_lines("./inputs/day17_sample")
+        .iter()
+        .map(|s| {
+            s.chars()
+                .map(|c| c.to_digit(10).unwrap() as usize)
+                .collect()
+        })
+        .collect();
+    input[0][0] = 0;
+    let mut losses: Vec<usize> = vec![];
+    let initial_lava = Lava::new(LavaDirection::Right, Position { x: 0, y: 0 }, 0, 0);
+    let mut existing_paths: HashMap<(LavaDirection, Position, usize), usize> = HashMap::new();
+    traverse(input, initial_lava, &mut losses, &mut existing_paths, false);
+    println!("{}", losses.iter().min().unwrap());
+}
+
+pub fn part2() {
     let mut input: Vec<Vec<usize>> = utils::read_lines("./inputs/day17")
         .iter()
         .map(|s| {
@@ -191,9 +219,6 @@ pub fn part1() {
     let mut losses: Vec<usize> = vec![];
     let initial_lava = Lava::new(LavaDirection::Right, Position { x: 0, y: 0 }, 0, 0);
     let mut existing_paths: HashMap<(LavaDirection, Position, usize), usize> = HashMap::new();
-    traverse(input, initial_lava, &mut losses, &mut existing_paths);
-    println!("{:?}", losses);
+    traverse(input, initial_lava, &mut losses, &mut existing_paths, true);
     println!("{}", losses.iter().min().unwrap());
 }
-
-pub fn part2() {}
