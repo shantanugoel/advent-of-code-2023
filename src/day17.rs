@@ -68,7 +68,7 @@ impl Position {
 
     pub fn reached_factory(&self, width: usize, height: usize) -> bool {
         self.x == width - 1 && self.y == height - 1
-        // self.x == 4 && self.y == 1
+        // self.x == 8 && self.y == 0
     }
 }
 
@@ -110,7 +110,7 @@ impl Lava {
             min_straight_blocks = 3;
             max_straight_blocks = 9;
         }
-        if self.straight_moved >= min_straight_blocks {
+        if start || self.straight_moved >= min_straight_blocks {
             let mut lava = Lava::new(self.direction.turn_left(), self.position, 0, self.heat_loss);
             lava.position = lava.direction.next_natural_position(&self.position);
             lavas.push(lava);
@@ -189,7 +189,6 @@ fn traverse(
         if new_lava.position.reached_factory(width, height)
             && (!ultra || new_lava.straight_moved >= 3)
         {
-            // println!("Adding Loss {} to {:?}", initial_lava.heat_loss, losses);
             losses.push(new_lava.heat_loss);
         }
     }
@@ -206,14 +205,14 @@ pub fn part1() {
         .collect();
     input[0][0] = 0;
     let mut losses: Vec<usize> = vec![];
-    let initial_lava = Lava::new(LavaDirection::Right, Position { x: 0, y: 0 }, 0, 0);
+    let initial_lava = Lava::new(LavaDirection::Down, Position { x: 0, y: 0 }, 0, 0);
     let mut existing_paths: HashMap<(LavaDirection, Position, usize), usize> = HashMap::new();
     traverse(input, initial_lava, &mut losses, &mut existing_paths, false);
     println!("{}", losses.iter().min().unwrap());
 }
 
 pub fn part2() {
-    let input: Vec<Vec<usize>> = utils::read_lines("./inputs/day17_sample2")
+    let input: Vec<Vec<usize>> = utils::read_lines("./inputs/day17")
         .iter()
         .map(|s| {
             s.chars()
@@ -223,7 +222,7 @@ pub fn part2() {
         .collect();
     // input[0][0] = 0;
     let mut losses: Vec<usize> = vec![];
-    let initial_lava = Lava::new(LavaDirection::Right, Position { x: 0, y: 0 }, 0, 0);
+    let initial_lava = Lava::new(LavaDirection::Down, Position { x: 0, y: 0 }, 0, 0);
     let mut existing_paths: HashMap<(LavaDirection, Position, usize), usize> = HashMap::new();
     traverse(input, initial_lava, &mut losses, &mut existing_paths, true);
     println!("{}", losses.iter().min().unwrap());
