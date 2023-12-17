@@ -107,7 +107,7 @@ impl Lava {
         let mut min_straight_blocks = 0;
         let mut max_straight_blocks = 2;
         if ultra {
-            min_straight_blocks = 4;
+            min_straight_blocks = 3;
             max_straight_blocks = 9;
         }
         if self.straight_moved >= min_straight_blocks {
