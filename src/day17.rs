@@ -207,7 +207,7 @@ pub fn part1() {
 }
 
 pub fn part2() {
-    let mut input: Vec<Vec<usize>> = utils::read_lines("./inputs/day17")
+    let mut input: Vec<Vec<usize>> = utils::read_lines("./inputs/day17_sample2")
         .iter()
         .map(|s| {
             s.chars()
