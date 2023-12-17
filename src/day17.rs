@@ -177,7 +177,7 @@ fn traverse(
 }
 
 pub fn part1() {
-    let mut input: Vec<Vec<usize>> = utils::read_lines("./inputs/day17_sample")
+    let mut input: Vec<Vec<usize>> = utils::read_lines("./inputs/day17")
         .iter()
         .map(|s| {
             s.chars()
