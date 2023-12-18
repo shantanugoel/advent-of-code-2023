@@ -153,7 +153,7 @@ fn run_digger(input: &Vec<Input>, ground: &mut Ground) {
 }
 
 pub fn part1() {
-    let lines = utils::read_lines("./inputs/day18_sample");
+    let lines = utils::read_lines("./inputs/day18");
     let input: Vec<Input> = lines
         .iter()
         .map(|s| {
@@ -183,9 +183,9 @@ pub fn part1() {
         }],
     };
     run_digger(&input, &mut ground);
-    for vertex in ground.clone().vertices {
-        println!("{:?}", vertex);
-    }
+    // for vertex in ground.clone().vertices {
+    //     println!("{:?}", vertex);
+    // }
     println!("{}", ground.calculate_polygon_area());
 }
 
