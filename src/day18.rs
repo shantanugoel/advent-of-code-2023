@@ -36,26 +36,6 @@ impl Direction {
             },
         }
     }
-
-    pub fn turn_left(&self) -> Direction {
-        match self {
-            Direction::Up => Direction::Left,
-            Direction::Left => Direction::Down,
-            Direction::Down => Direction::Right,
-            Direction::Right => Direction::Up,
-            Direction::Unknown => Direction::Left,
-        }
-    }
-
-    pub fn turn_right(&self) -> Direction {
-        match self {
-            Direction::Up => Direction::Right,
-            Direction::Right => Direction::Down,
-            Direction::Down => Direction::Left,
-            Direction::Left => Direction::Up,
-            Direction::Unknown => Direction::Right,
-        }
-    }
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]
@@ -68,40 +48,23 @@ impl Sub for Position {
     type Output = i64;
 
     fn sub(self, rhs: Self) -> i64 {
-        let mut diff: i64 = 0;
         if self.x == rhs.x {
-            diff = self.y as i64 - rhs.y as i64;
+            self.y as i64 - rhs.y as i64
         } else {
-            diff = self.x as i64 - rhs.x as i64;
+            self.x as i64 - rhs.x as i64
         }
-        diff
     }
-}
-
-struct Digger {
-    direction: Direction,
-    position: Position,
-    color: String,
-}
-
-struct Tile {
-    dug: bool,
-    color: String,
 }
 
 #[derive(Debug, Clone)]
 struct Input {
     direction: Direction,
     steps: usize,
-    color: String,
 }
 
 #[derive(Debug, Clone)]
 struct Vertex {
     position: Position,
-    direction: Direction,
-    steps: usize,
-    color: String,
 }
 
 #[derive(Debug, Clone)]
@@ -110,22 +73,11 @@ struct Ground {
 }
 
 impl Ground {
-    pub fn dig(&mut self, direction: Direction, steps: usize, color: String) {
+    pub fn dig(&mut self, direction: Direction, steps: usize) {
         let current_position = self.vertices.last().unwrap().position;
-        let current_direction = self.vertices.last().unwrap().direction;
-        // let new_direction = match direction {
-        //     Direction::Down => direction,
-        //     Direction::Up => direction,
-        //     Direction::Unknown => direction,
-        //     Direction::Left => current_direction.turn_left(),
-        //     Direction::Right => current_direction.turn_right(),
-        // };
         let new_position = direction.next_natural_position(&current_position, steps as i32);
         self.vertices.push(Vertex {
             position: new_position,
-            direction,
-            steps,
-            color,
         });
     }
 
@@ -143,12 +95,7 @@ impl Ground {
 
 fn run_digger(input: &Vec<Input>, ground: &mut Ground) {
     for instruction in input {
-        println!("{:?}", instruction);
-        ground.dig(
-            instruction.direction,
-            instruction.steps,
-            instruction.color.clone(),
-        );
+        ground.dig(instruction.direction, instruction.steps);
     }
 }
 
@@ -166,27 +113,41 @@ pub fn part1() {
                 _ => Direction::Unknown,
             };
             let steps = parts.next().unwrap().parse().unwrap();
-            let color = parts.next().unwrap();
-            Input {
-                direction,
-                steps,
-                color: color.to_string(),
-            }
+            Input { direction, steps }
         })
         .collect();
     let mut ground = Ground {
         vertices: vec![Vertex {
             position: Position { x: 0, y: 0 },
-            direction: Direction::Unknown,
-            steps: 0,
-            color: "".to_string(),
         }],
     };
     run_digger(&input, &mut ground);
-    // for vertex in ground.clone().vertices {
-    //     println!("{:?}", vertex);
-    // }
     println!("{}", ground.calculate_polygon_area());
 }
 
-pub fn part2() {}
+pub fn part2() {
+    let lines = utils::read_lines("./inputs/day18");
+    let input: Vec<Input> = lines
+        .iter()
+        .map(|s| {
+            let parts = s.split('#');
+            let direction = match parts.clone().last().unwrap().chars().nth(5).unwrap() {
+                '0' => Direction::Right,
+                '2' => Direction::Left,
+                '1' => Direction::Down,
+                '3' => Direction::Up,
+                _ => Direction::Unknown,
+            };
+            let steps =
+                u32::from_str_radix(parts.last().unwrap().get(0..5).unwrap(), 16).unwrap() as usize;
+            Input { direction, steps }
+        })
+        .collect();
+    let mut ground = Ground {
+        vertices: vec![Vertex {
+            position: Position { x: 0, y: 0 },
+        }],
+    };
+    run_digger(&input, &mut ground);
+    println!("{}", ground.calculate_polygon_area());
+}
