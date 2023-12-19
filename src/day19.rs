@@ -140,7 +140,7 @@ fn parse_workflow(part: PartStats, workflows: &HashMap<String, WorkFlow>) -> Con
 }
 
 pub fn part1() {
-    let lines = utils::read_lines("./inputs/day19_sample");
+    let lines = utils::read_lines("./inputs/day19");
     let mut workflows: HashMap<String, WorkFlow> = HashMap::new();
     let mut parsing_workflows = true;
     let mut parts: Vec<PartStats> = vec![];
@@ -164,7 +164,6 @@ pub fn part1() {
     // }
     let mut sum = 0;
     for part in parts {
-        println!("{:?}", part);
         if parse_workflow(part, &workflows) == ConditionResultStatus::Accepted {
             sum += part.sum();
         }
