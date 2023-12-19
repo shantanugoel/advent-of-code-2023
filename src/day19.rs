@@ -188,10 +188,10 @@ pub fn part2() {
         "in".to_string(),
         0,
         Combination {
-            x: (0, 4000),
-            m: (0, 4000),
-            a: (0, 4000),
-            s: (0, 4000),
+            x: (1, 4000),
+            m: (1, 4000),
+            a: (1, 4000),
+            s: (1, 4000),
         },
         &mut total,
     );
@@ -208,26 +208,11 @@ struct Combination {
 
 impl Combination {
     pub fn value(&self) -> u64 {
-        let x = if self.x.1 > self.x.0 {
-            self.x.1 - self.x.0
-        } else {
-            1
-        };
-        let m = if self.m.1 > self.m.0 {
-            self.m.1 - self.m.0
-        } else {
-            1
-        };
-        let a = if self.a.1 > self.a.0 {
-            self.a.1 - self.a.0
-        } else {
-            1
-        };
-        let s = if self.s.1 > self.s.0 {
-            self.s.1 - self.s.0
-        } else {
-            1
-        };
+        let x = self.x.1 - self.x.0 + 1;
+        let m = self.m.1 - self.m.0 + 1;
+        let a = self.a.1 - self.a.0 + 1;
+        let s = self.s.1 - self.s.0 + 1;
+        println!("Value: {:?}", self);
         x * m * a * s
     }
 }
@@ -241,13 +226,13 @@ pub fn update_combination(
     if positive_path {
         match comparator {
             '<' => (old_min_max.0, old_min_max.1.min(rule_value - 1)),
-            '>' => (old_min_max.0.max(rule_value), old_min_max.1),
+            '>' => (old_min_max.0.max(rule_value + 1), old_min_max.1),
             _ => old_min_max,
         }
     } else {
         match comparator {
             '<' => (old_min_max.0.max(rule_value), old_min_max.1),
-            '>' => (old_min_max.0, old_min_max.1.min(rule_value - 1)),
+            '>' => (old_min_max.0, old_min_max.1.min(rule_value)),
             _ => old_min_max,
         }
     }
@@ -262,10 +247,10 @@ fn find_combinations(
 ) {
     let mut current_combinations_positive = combinations;
     let mut current_combinations_negative = combinations;
-    println!("{}, combo: {:?}", workflow_key, combinations);
 
     let workflow = workflows.get(&workflow_key).unwrap();
     if let Some(rule) = workflow.0.get(rule_index) {
+        println!("{}, combo: {:?}", workflow_key, combinations);
         match rule.stat {
             'x' => {
                 current_combinations_positive.x = update_combination(
@@ -329,8 +314,12 @@ fn find_combinations(
             ConditionResultStatus::Accepted => {
                 *total += current_combinations_positive.value();
                 println!(
-                    "Accepted => {} - {:?}\n{:?}",
-                    total, rule, current_combinations_positive
+                    "----------Accepted => {}: {}, {} - {:?}\n{:?}",
+                    workflow_key,
+                    current_combinations_positive.value(),
+                    total,
+                    rule,
+                    current_combinations_positive
                 );
                 find_combinations(
                     workflows,
@@ -342,7 +331,7 @@ fn find_combinations(
                 // }
             }
             ConditionResultStatus::Rejected => {
-                // println!("Rejected => {:?}", rule);
+                println!("Rejected => {:?}", rule);
                 find_combinations(
                     workflows,
                     workflow_key,
