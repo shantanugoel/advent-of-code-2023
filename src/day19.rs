@@ -169,7 +169,7 @@ pub fn part1() {
 }
 
 pub fn part2() {
-    let lines = utils::read_lines("./inputs/day19_sample");
+    let lines = utils::read_lines("./inputs/day19");
     let mut workflows: HashMap<String, WorkFlow> = HashMap::new();
 
     for line in lines {
