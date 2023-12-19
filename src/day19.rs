@@ -182,163 +182,191 @@ pub fn part2() {
         workflows.insert(workflow_name, workflow);
     }
 
-    // let mut count = 0;
-    // let mut i = 0;
-    // for x in 1..=4000 {
-    //     for m in 1..=4000 {
-    //         for a in 1..=4000 {
-    //             for s in 1..=4000 {
-    //                 let part = PartStats { x, m, a, s };
-    //                 i += 1;
-    //                 println!("{}", i);
-    //                 if parse_workflow(part, &workflows) == ConditionResultStatus::Accepted {
-    //                     count += 1;
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
     let mut total: u64 = 0;
     find_combinations(
         &workflows,
         "in".to_string(),
         0,
-        // RulePath::Positive,
-        1,
+        Combination {
+            x: (0, 4000),
+            m: (0, 4000),
+            a: (0, 4000),
+            s: (0, 4000),
+        },
         &mut total,
     );
     println!("{}", total);
 }
 
-// #[derive(Debug, Clone, PartialEq, Eq)]
-// enum RulePath {
-//     Positive,
-//     Negative,
-// }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Combination {
+    x: (u64, u64),
+    m: (u64, u64),
+    a: (u64, u64),
+    s: (u64, u64),
+}
 
-// struct ChainElement {
-//     workflow_key: String,
-//     rule_index: usize,
-//     path: RulePath,
-// }
+impl Combination {
+    pub fn value(&self) -> u64 {
+        let x = if self.x.1 > self.x.0 {
+            self.x.1 - self.x.0
+        } else {
+            1
+        };
+        let m = if self.m.1 > self.m.0 {
+            self.m.1 - self.m.0
+        } else {
+            1
+        };
+        let a = if self.a.1 > self.a.0 {
+            self.a.1 - self.a.0
+        } else {
+            1
+        };
+        let s = if self.s.1 > self.s.0 {
+            self.s.1 - self.s.0
+        } else {
+            1
+        };
+        x * m * a * s
+    }
+}
 
-// fn find_combinations(workflows: &HashMap<String, WorkFlow>) -> u64 {
-//     let mut chain: VecDeque<ChainElement> = VecDeque::new();
-//     chain.push_back(ChainElement {
-//         workflow_key: "in".to_string(),
-//         rule_index: 0,
-//         path: RulePath::Positive,
-//     });
-
-//     let mut combinations: u64 = 0;
-//     let mut current_combo = 0;
-//     while let Some(item) = chain.pop_front() {
-//         let workflow = workflows.get(&item.workflow_key).unwrap();
-//         let rule = workflow.0.get(item.rule_index).unwrap();
-//         current_combo *= match rule.comparator {
-//             '<' => if rule.path == RulePath::Positive {rule.value - 1} else {}
-//             '>' => 4000 - rule.value,
-//             _ => 1,
-//         };
-//         match rule.result.status {
-//             ConditionResultStatus::Accepted => {
-//                 combinations += current_combo;
-//                 current_combo = 0;
-//             }
-//             ConditionResultStatus::Rejected => current_combo = 0,
-//             _ => {}
-//         }
-//     }
-//     combinations
-// }
+pub fn update_combination(
+    old_min_max: (u64, u64),
+    rule_value: u64,
+    comparator: char,
+    positive_path: bool,
+) -> (u64, u64) {
+    if positive_path {
+        match comparator {
+            '<' => (old_min_max.0, old_min_max.1.min(rule_value - 1)),
+            '>' => (old_min_max.0.max(rule_value), old_min_max.1),
+            _ => old_min_max,
+        }
+    } else {
+        match comparator {
+            '<' => (old_min_max.0.max(rule_value), old_min_max.1),
+            '>' => (old_min_max.0, old_min_max.1.min(rule_value - 1)),
+            _ => old_min_max,
+        }
+    }
+}
 
 fn find_combinations(
     workflows: &HashMap<String, WorkFlow>,
     workflow_key: String,
     rule_index: usize,
-    // rule_path: RulePath,
-    combinations: u64,
+    combinations: Combination,
     total: &mut u64,
 ) {
-    let current_combinations;
-    println!("{}, combo: {}", workflow_key, combinations);
+    let mut current_combinations_positive = combinations;
+    let mut current_combinations_negative = combinations;
+    println!("{}, combo: {:?}", workflow_key, combinations);
 
     let workflow = workflows.get(&workflow_key).unwrap();
     if let Some(rule) = workflow.0.get(rule_index) {
-        current_combinations = match rule.comparator {
-            '<' => {
-                // if rule_path == RulePath::Positive {
-                (rule.value - 1, 4000 - rule.value + 1)
-                // } else {
-                //     (4000 - rule.value + 1, rule.value - 1)
-                // }
+        match rule.stat {
+            'x' => {
+                current_combinations_positive.x = update_combination(
+                    current_combinations_positive.x,
+                    rule.value,
+                    rule.comparator,
+                    true,
+                );
+                current_combinations_negative.x = update_combination(
+                    current_combinations_negative.x,
+                    rule.value,
+                    rule.comparator,
+                    false,
+                );
             }
-            '>' => {
-                // if rule_path == RulePath::Positive {
-                (4000 - rule.value, rule.value)
-                // } else {
-                //     (rule.value, 4000 - rule.value)
-                // }
+            'm' => {
+                current_combinations_positive.m = update_combination(
+                    current_combinations_positive.m,
+                    rule.value,
+                    rule.comparator,
+                    true,
+                );
+                current_combinations_negative.m = update_combination(
+                    current_combinations_negative.m,
+                    rule.value,
+                    rule.comparator,
+                    false,
+                );
             }
-            _ => (1, 1),
-        };
+            'a' => {
+                current_combinations_positive.a = update_combination(
+                    current_combinations_positive.a,
+                    rule.value,
+                    rule.comparator,
+                    true,
+                );
+                current_combinations_negative.a = update_combination(
+                    current_combinations_negative.a,
+                    rule.value,
+                    rule.comparator,
+                    false,
+                );
+            }
+            's' => {
+                current_combinations_positive.s = update_combination(
+                    current_combinations_positive.s,
+                    rule.value,
+                    rule.comparator,
+                    true,
+                );
+                current_combinations_negative.s = update_combination(
+                    current_combinations_negative.s,
+                    rule.value,
+                    rule.comparator,
+                    false,
+                );
+            }
+            _ => {}
+        }
         match rule.result.status {
             ConditionResultStatus::Accepted => {
-                println!("Accepted => {:?}", rule);
-                // if rule_path == RulePath::Positive {
-                *total += combinations * current_combinations.0;
+                *total += current_combinations_positive.value();
+                println!(
+                    "Accepted => {} - {:?}\n{:?}",
+                    total, rule, current_combinations_positive
+                );
                 find_combinations(
                     workflows,
                     workflow_key,
                     rule_index + 1,
-                    // RulePath::Positive,
-                    combinations * current_combinations.1,
+                    current_combinations_negative,
                     total,
                 );
                 // }
             }
             ConditionResultStatus::Rejected => {
                 // println!("Rejected => {:?}", rule);
-                // if rule_path == RulePath::Positive {
                 find_combinations(
                     workflows,
                     workflow_key,
                     rule_index + 1,
-                    // RulePath::Positive,
-                    combinations * current_combinations.1,
+                    current_combinations_negative,
                     total,
                 );
-                // }
             }
             ConditionResultStatus::Redirected => {
                 // println!("Redirected => {:?}", rule);
-                // if rule_path == RulePath::Positive {
                 find_combinations(
                     workflows,
                     rule.result.value.clone(),
                     0,
-                    // RulePath::Positive,
-                    combinations * current_combinations.0,
+                    current_combinations_positive,
                     total,
                 );
                 find_combinations(
                     workflows,
                     workflow_key,
                     rule_index + 1,
-                    // RulePath::Positive,
-                    combinations * current_combinations.1,
+                    current_combinations_negative,
                     total,
                 );
-                // } else {
-                // find_combinations(
-                //     workflows,
-                //     workflow_key,
-                //     rule_index + 1,
-                //     RulePath::Positive,
-                //     current_combinations,
-                //     total,
-                // );
-                // }
             }
         }
     }
