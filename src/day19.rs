@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::utils;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct PartStats {
     x: u64,
     m: u64,
@@ -30,22 +30,26 @@ impl PartStats {
         }
         part_stats
     }
+
+    pub fn sum(&self) -> u64 {
+        self.x + self.m + self.a + self.s
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 enum ConditionResultStatus {
     Redirected,
     Accepted,
     Rejected,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct ConditionResult {
     status: ConditionResultStatus,
     value: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Condition {
     stat: char,
     comparator: char,
@@ -89,7 +93,7 @@ impl Condition {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct WorkFlow(Vec<Condition>);
 
 impl WorkFlow {
@@ -100,6 +104,39 @@ impl WorkFlow {
         }
         WorkFlow(conditions)
     }
+}
+
+fn parse_workflow(part: PartStats, workflows: &HashMap<String, WorkFlow>) -> ConditionResultStatus {
+    let mut result: ConditionResultStatus = ConditionResultStatus::Redirected;
+    let mut workflow_key = "in";
+    let mut workflow: &WorkFlow;
+    loop {
+        match result {
+            ConditionResultStatus::Accepted => break,
+            ConditionResultStatus::Rejected => break,
+            ConditionResultStatus::Redirected => workflow = workflows.get(workflow_key).unwrap(),
+        }
+        for rule in &workflow.0 {
+            let part_value = match rule.stat {
+                'x' => Some(part.x),
+                'm' => Some(part.m),
+                'a' => Some(part.a),
+                's' => Some(part.s),
+                _ => None,
+            };
+            let condition_satisfied = match rule.comparator {
+                '>' => part_value.unwrap() > rule.value,
+                '<' => part_value.unwrap() < rule.value,
+                _ => true,
+            };
+            if condition_satisfied {
+                result = rule.result.status.clone();
+                workflow_key = rule.result.value.as_str();
+                break;
+            }
+        }
+    }
+    result
 }
 
 pub fn part1() {
@@ -122,12 +159,17 @@ pub fn part1() {
             parts.push(PartStats::new(line.replace(['{', '}'], "")));
         }
     }
-    for workflow in workflows {
-        println!("{:?}", workflow);
-    }
+    // for workflow in workflows {
+    //     println!("{:?}", workflow);
+    // }
+    let mut sum = 0;
     for part in parts {
         println!("{:?}", part);
+        if parse_workflow(part, &workflows) == ConditionResultStatus::Accepted {
+            sum += part.sum();
+        }
     }
+    println!("{}", sum);
 }
 
 pub fn part2() {}
