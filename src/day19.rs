@@ -159,9 +159,6 @@ pub fn part1() {
             parts.push(PartStats::new(line.replace(['{', '}'], "")));
         }
     }
-    // for workflow in workflows {
-    //     println!("{:?}", workflow);
-    // }
     let mut sum = 0;
     for part in parts {
         if parse_workflow(part, &workflows) == ConditionResultStatus::Accepted {
@@ -171,4 +168,35 @@ pub fn part1() {
     println!("{}", sum);
 }
 
-pub fn part2() {}
+pub fn part2() {
+    let lines = utils::read_lines("./inputs/day19_sample");
+    let mut workflows: HashMap<String, WorkFlow> = HashMap::new();
+
+    for line in lines {
+        if line.is_empty() {
+            continue;
+        }
+        let mut parts = line.split('{');
+        let workflow_name = parts.next().unwrap().to_string();
+        let workflow = WorkFlow::new(parts.next().unwrap().replace('}', ""));
+        workflows.insert(workflow_name, workflow);
+    }
+
+    let mut count = 0;
+    let mut i = 0;
+    for x in 1..=4000 {
+        for m in 1..=4000 {
+            for a in 1..=4000 {
+                for s in 1..=4000 {
+                    let part = PartStats { x, m, a, s };
+                    i += 1;
+                    println!("{}", i);
+                    if parse_workflow(part, &workflows) == ConditionResultStatus::Accepted {
+                        count += 1;
+                    }
+                }
+            }
+        }
+    }
+    println!("{}", count);
+}
